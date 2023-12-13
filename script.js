@@ -1,79 +1,79 @@
-document.addEventListener("DOMContentLoaded", function () {
-    const display = document.getElementById("calculator-display");
-    const buttons = document.querySelectorAll(".buttons button, .bottom-row button");
+const display = document.getElementById('calculator-display');
+const buttons = document.querySelectorAll('.buttons button');
+const clearBtn = document.querySelector('.bottom-row button:nth-child(1)');
+const backspaceBtn = document.querySelector('.bottom-row button:nth-child(2)');
 
-    let currentInput = "";
-    let currentOperator = "";
-    let prevInput = "0";
+let currentNumber = '';
+let previousNumber = '';
+let operator = null;
 
-    buttons.forEach((button) => {
-        button.addEventListener("click", () => {
-            handleButtonClick(button.innerText);
-            updateDisplay();
-        });
-    }); 
+function updateDisplay(value) {
+  display.textContent = value;
+}
 
-    function handleButtonClick(value) {
-        if (isDigit(value)) {
-            currentInput += value;
-        } else if (isOperator(value)) {
-            handleOperator(value);
-        } else if (value === "=") {
-            performCalculation();
-        } else if (value === "C") {
-            clearCalculator();
-        } else if (value === "Backspace") {
-            backspace();
-        }
+function clearDisplay() { 
+  currentNumber = '';
+  previousNumber = ''; 
+  operator = null;
+  updateDisplay('0');
+}
+
+function handleNumberClick(value) {
+  currentNumber += value;
+  updateDisplay(currentNumber);
+} 
+
+function handleOperatorClick(op) {
+  if (previousNumber === '') {
+    previousNumber = currentNumber;
+    currentNumber = '';
+  }
+  operator = op;
+}
+
+function handleEqualClick() {
+  if (previousNumber !== '' && currentNumber !== '' && operator !== null) {
+    let result;
+    switch (operator) {
+      case '+':
+        result = parseFloat(previousNumber) + parseFloat(currentNumber);
+        break;
+      case '-':
+        result = parseFloat(previousNumber) - parseFloat(currentNumber);
+        break;
+      case '*':
+        result = parseFloat(previousNumber) * parseFloat(currentNumber);
+        break;
+      case '/':
+        result = parseFloat(previousNumber) / parseFloat(currentNumber);
+        break;
     }
+    currentNumber = result.toString();
+    previousNumber = '';
+    operator = null;
+    updateDisplay(currentNumber);
+  }
+}
 
-    function isDigit(value) {
-        return /^\d$/.test(value);
-    }
+function backspace() {
+  currentNumber = currentNumber.slice(0, -1);
+  updateDisplay(currentNumber);
+}
 
-    function isOperator(value) {
-        return /[\+\-\*/]/.test(value);
-    }
+buttons.forEach(button => button.addEventListener('click', () => {
+  const value = button.textContent;
+  if (!isNaN(parseFloat(value))) {
+    handleNumberClick(value);
+  } else if (value === 'C') {
+    clearDisplay();
+  } else if (value === '←') {
+    backspace();
+  } else if (value === '=') {
+    handleEqualClick();
+  } else {
+    handleOperatorClick(value);
+  }
+}));
 
-    function handleOperator(operator) {
-        if (currentInput !== "") {
-            performCalculation();
-            currentOperator = operator;
-            prevInput = currentInput;
-            currentInput = "";
-        } else if (currentInput === "" && prevInput !== "0") {
-            currentOperator = operator;
-        }
-    }
-
-    function performCalculation() {
-        if (currentInput !== "") {
-            try {
-                const result = new Function('return ' + prevInput + currentOperator + currentInput)();
-                currentInput = String(result);
-                currentOperator = "";
-                prevInput = "0";
-            } catch (error) {
-                // Handle invalid expressions or errors
-                currentInput = "Error";
-            }
-        }
-    }
-
-    function clearCalculator() {
-        currentInput = "";
-        currentOperator = "";
-        prevInput = "0";
-    }
-
-    function backspace() {
-        currentInput = currentInput.slice(0, -1);
-        if (currentInput === "") {
-            currentInput = "0";
-        }
-    }
-
-    function updateDisplay() {
-        display.innerText = currentInput === "" ? "0" : currentInput;
-    }
-});
+clearBtn.addEventListener('click', clearDisplay);
+backspaceBtn.addEventListener('click', backspace);
